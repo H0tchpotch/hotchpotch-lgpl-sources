@@ -13,7 +13,8 @@ source, modify it, and replace it in the app.
 | `libfribidi.so` | GNU FriBidi | 1.0.18 | LGPL-2.1-or-later | https://github.com/fribidi/fribidi/tree/v1.0.18 | `fribidi-1.0.18.tar.xz` | `1de5e8073d035388b71d0b2d452b1da1f8caeea8a7702997b401fe1b6250727f` |
 | `libsmb2.so` | libsmb2 | 6.3 | LGPL-2.1-or-later | https://github.com/sahlberg/libsmb2/tree/libsmb2-6.3 | `libsmb2-6.3.tar.gz` | `5011003fd091513f897e1ebbb8e1a40af634386df7199716348b7f77569a2790` |
 
-The source archives are attached to each release of this repository (tag = app version). They are the unmodified
+The source archives are attached to each release of this repository (tag = app version). The scripts on `main` match the libraries
+in the next app release; each shipped version gets its own tag. They are the unmodified
 upstream archives; every change made at build time is in the scripts below.
 
 ## How each library is built
@@ -23,7 +24,8 @@ ELF page alignment (`-Wl,-z,max-page-size=16384`).
 
 - **FFmpeg** — [`ffmpeg/build_ffmpeg_android.sh`](ffmpeg/build_ffmpeg_android.sh): the exact `configure` options
   (`--disable-gpl --disable-nonfree --disable-version3`, shared libraries only, no external libraries, zlib from the
-  Android system; the `dca`, `truehd`, `mlp`, `eac3`, `hevc`, `vp9` and `av1` decoders are not built; libavfilter
+  Android system; the `dca`, `truehd`, `mlp`, `eac3`, `hevc`, `vp9`, `av1`, `aac`, `aac_fixed`, `aac_latm`, `amrnb`, `amrwb` and
+  `atrac9` decoders are not built (2026-11-18 — the app plays AAC and AMR with the device's own decoders); libavfilter
   holds only `buffer`, `buffersink`, `bwdif`, `yadif`, `w3fdif`). The only source change is a build-system tweak the
   script applies with `sed` to `ffbuild/library.mak` (link through a response file, to stay under the Windows command
   line limit); the produced code is unchanged by it.
