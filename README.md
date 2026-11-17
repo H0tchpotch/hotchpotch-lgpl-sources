@@ -48,6 +48,11 @@ archive there, or change the paths at the top of the script.
 
 The app does not check its own integrity, so a replaced library is loaded as is.
 
+Checked for v0.1.0 (2026-11-18): FriBidi rebuilt from this release's archive on its own (Meson, the cross file in
+`fribidi/build_libass_android.sh`, `default_library=shared`) with one change to `lib/fribidi.c` (a marker in
+`fribidi_version_info`), put into the APK as above, aligned, re-signed and installed over the app on a test tablet
+(Android 15). The running app maps the new `libfribidi.so` from the APK and ASS subtitles draw as before.
+
 ## 한국어 요약
 
 Hotchpotch 안드로이드 앱에 들어간 LGPL 라이브러리(FFmpeg, FriBidi, libsmb2)의 대응 소스입니다. 앱 코드는 여기에
