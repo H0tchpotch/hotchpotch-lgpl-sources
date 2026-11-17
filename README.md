@@ -53,6 +53,17 @@ Checked for v0.1.0 (2026-11-18): FriBidi rebuilt from this release's archive on 
 `fribidi_version_info`), put into the APK as above, aligned, re-signed and installed over the app on a test tablet
 (Android 15). The running app maps the new `libfribidi.so` from the APK and ASS subtitles draw as before.
 
+Then all of them at once (same day): FFmpeg rebuilt from this release's archive with
+`ffmpeg/build_ffmpeg_android.sh` plus `--extra-version=HP-RELINK-TEST` (its own symbol checks passed), libsmb2 rebuilt
+with its CMake, `smb2_stub.c` and `smb2_exports.map` as above plus an exported marker string, and the FriBidi above —
+eight `.so` files swapped into one APK, aligned, re-signed, installed. The running app maps all six FFmpeg libraries and
+FriBidi from the APK, and a WMV file plays through the rebuilt FFmpeg (its demuxer and `wmv2` decoder). `libsmb2.so` is
+loaded only when an SMB source is used; checked statically instead: every `smb2_*` symbol the app's network library
+imports is exported by the rebuilt library.
+
+Notes for building on Windows (Git Bash): FFmpeg's `configure` needs a POSIX temporary directory
+(`TMPDIR=/tmp/...`), and the NDK's `make` builds FFmpeg in-tree only.
+
 ## 한국어 요약
 
 Hotchpotch 안드로이드 앱에 들어간 LGPL 라이브러리(FFmpeg, FriBidi, libsmb2)의 대응 소스입니다. 앱 코드는 여기에
