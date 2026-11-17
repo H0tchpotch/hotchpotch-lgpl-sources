@@ -18,11 +18,14 @@
 #     P2). HP_FFMPEG_VERIFY_DTS_TRUEHD=1 makes the G18 verification build with
 #     dca/truehd/mlp — never ship it; the variant is written to lib/hp_ffmpeg_variant.txt.
 #   - hevc, vp9, av1: the devices decode them in hardware (§5); AV1 software is dav1d
-#     outside FFmpeg (§15.10); software HEVC also carries patent weight.
-#   - aac, aac_fixed, aac_latm, amrnb, amrwb, atrac9 (VIDEO_PLAYER.md §15.47 / G19,
-#     2026-11-18 사용자): pool or holder patents still live (AAC: no free tier), and every
-#     Android device must decode AAC and AMR itself — the platform decoder covers them
-#     under the device maker's licence. ATRAC9 has no use here.
+#     neither (removed 2026-11-18, §15.48 — device decoders only); software HEVC also carries patent weight.
+#   - PATENT_EXCLUDED (VIDEO_PLAYER.md §15.47 / G19, 2026-11-18 사용자 "특허 문제될 만한 건 다
+#     빼"): every decoder with a live pool or licence programme (H.264, VC-1/WMV3/MSS2, AAC,
+#     AMR, Opus — Vectis pool, ProRes, DNxHD, AVS1, WMA Pro/Lossless/Voice/XMA, aptX) or with
+#     patents that may still be in force and no grant (CineForm, ATRAC3plus/AL/9, MPEG-4 ALS,
+#     Dolby E, On2 AVC, RealVideo 8/9, SVQ3, Mobiclip, HCA, FastAudio, IMM4/5, VP7, and the
+#     2005–2012 screen/editing codecs SpeedHQ, Canopus HQ/HQA/HQX, G2M, AGM, Pixlet). H.264,
+#     AAC, AMR and Opus stay playable through the device's own decoder (its maker's licence).
 # Encoders, muxers, devices, hwaccels, network protocols and programs are disabled.
 # The JNI .so files are built by Gradle/CMake.
 #
@@ -33,7 +36,7 @@
 set -euo pipefail
 
 VERIFY_DTS_TRUEHD="${HP_FFMPEG_VERIFY_DTS_TRUEHD:-0}"
-PATENT_EXCLUDED="aac,aac_fixed,aac_latm,amrnb,amrwb,atrac9"
+PATENT_EXCLUDED="aac,aac_fixed,aac_latm,amrnb,amrwb,atrac9,h264,svq3,vc1,wmv3,vc1image,wmv3image,mss2,prores,dnxhd,cfhd,cavs,rv30,rv40,mobiclip,imm4,imm5,speedhq,hq_hqa,hqx,g2m,agm,vp7,pixlet,wmapro,xma1,xma2,wmalossless,wmavoice,atrac3p,atrac3al,atrac3pal,dolby_e,als,on2avc,opus,aptx,aptx_hd,hca,fastaudio"
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 FFMPEG_SRC="${REPO_ROOT}/third_party/ffmpeg"
@@ -214,25 +217,28 @@ check_internal libavformat.so ff_iff_demuxer "IFF/DFF demuxer"
 check_internal libavcodec.so ff_dsd_lsbf_decoder "DSD LSBF decoder"
 check_internal libavcodec.so ff_dsd_msbf_decoder "DSD MSBF decoder"
 check_internal libavcodec.so ff_dst_decoder "DST decoder"
-for codec in pcm_s16be pcm_s24be ape mpc7 mpc8 tta wavpack wmav2 wmapro wmalossless alac mp1float mp2float; do
+for codec in pcm_s16be pcm_s24be ape mpc7 mpc8 tta wavpack wmav2 alac mp1float mp2float; do
     check_internal libavcodec.so "ff_${codec}_decoder" "${codec} decoder"
 done
 for demuxer in aiff ape mpc mpc8 tta wv asf mov mp3 matroska; do
     check_internal libavformat.so "ff_${demuxer}_demuxer" "${demuxer} demuxer"
 done
 # VIDEO_PLAYER.md §15.4: representative video/audio decoders and the §15.5 container demuxers.
-for codec in h264 mpeg1video mpeg2video mpeg4 msmpeg4v1 msmpeg4v2 msmpeg4v3 wmv1 wmv2 wmv3 vc1 h263 \
-             mjpeg dvvideo cinepak indeo3 indeo5 huffyuv rv40 theora vp8 prores \
-             ac3 mp3float vorbis opus cook wmapro png; do
+for codec in mpeg1video mpeg2video mpeg4 msmpeg4v1 msmpeg4v2 msmpeg4v3 wmv1 wmv2 h263 \
+             mjpeg dvvideo cinepak indeo3 indeo5 huffyuv theora vp8 \
+             ac3 mp3float vorbis cook png; do
     check_internal libavcodec.so "ff_${codec}_decoder" "${codec} decoder"
 done
 for demuxer in avi asf rm ogg mpegps mpegts mxf flv nut; do
     check_internal libavformat.so "ff_${demuxer}_demuxer" "${demuxer} demuxer"
 done
 # §15.1: decoders the hardware owns stay out of FFmpeg.
+# WHY the registered list, not symbols: a few decoders share a source file with a kept one (atrac3al lives in
+# atrac3.c), so their struct is in the .so but never registered — avcodec only finds what codec_list.c names.
+CODEC_LIST="${FFMPEG_SRC}/libavcodec/codec_list.c"
 for codec in hevc vp9 av1 ${PATENT_EXCLUDED//,/ }; do
-    if "${NM}" "${LIB_DIR}/libavcodec.so" | grep -E " [dDrR] ff_${codec}_decoder$" >/dev/null; then
-        echo "ff_${codec}_decoder must not be built (VIDEO_PLAYER.md §15.1 / §15.47)" >&2
+    if grep -qE "&ff_${codec}_decoder," "${CODEC_LIST}"; then
+        echo "ff_${codec}_decoder must not be built (VIDEO_PLAYER.md §15.1 / §15.48)" >&2
         exit 1
     fi
 done

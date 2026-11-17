@@ -4,7 +4,7 @@
 #   static: libass (ISC), FreeType (FTL), HarfBuzz (MIT), fontconfig (MIT-style), Expat (MIT)
 #   shared: FriBidi (LGPL-2.1) - WHY shared: like FFmpeg (§8.1 'LGPL 현황'), so a user can relink it.
 # One Meson cross build of libass with the others as local subprojects (libass's own dependency() calls fall
-# back to them). Needs meson + ninja (as for dav1d), the NDK, and gperf on the host for fontconfig's perfect
+# back to them). Needs meson (pip install --user meson) + ninja, the NDK, and gperf on the host for fontconfig's perfect
 # hash - built once from GNU gperf 3.1 into third_party/.tools (a build tool only; nothing of it ships).
 # Run ./scripts/vendor_c_libs.sh --only-libass first.
 set -euo pipefail
