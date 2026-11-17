@@ -1,0 +1,16 @@
+# 2. libsmb2 6.3 -> LGPL 분리를 위해 독립 공유 라이브러리(libsmb2.so)로 빌드 (§0.2)
+# ---------------------------------------------------------------------------
+set(BUILD_SHARED_LIBS ON CACHE BOOL "" FORCE)
+set(ENABLE_EXAMPLES OFF CACHE BOOL "" FORCE)
+add_subdirectory("${LIBSMB2_DIR}" "${CMAKE_CURRENT_BINARY_DIR}/libsmb2_build" EXCLUDE_FROM_ALL)
+
+target_sources(smb2 PRIVATE smb2_stub.c)
+# NOTE: -Wno-error는 벤더링된 libsmb2 소스 전용 (헌장 §4 경고=에러는 우리 코드에 적용).
+# smb2_stub.c는 같은 타깃에 있어 함께 완화되지만, 이 파일은 -Werror로도 깨끗하게 컴파일됨을 확인함.
+target_compile_options(smb2 PRIVATE -Wno-error)
+# WHY: build-logic의 CMAKE_SHARED_LINKER_FLAGS에는 루트 exports.map(Java_* 전용)이 걸려 있으므로,
+# libsmb2.so가 libhpnet_c.so에게 smb2_* 심볼을 노출할 수 있도록 smb2_exports.map을 뒤에 덮어쓴다.
+target_link_options(smb2 PRIVATE
+    "-Wl,--version-script=${CMAKE_CURRENT_SOURCE_DIR}/smb2_exports.map"
+)
+

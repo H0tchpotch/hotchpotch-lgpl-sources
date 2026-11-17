@@ -1,0 +1,6 @@
+{
+    global:
+        smb2_*;
+    local:
+        *;
+};
